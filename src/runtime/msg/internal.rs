@@ -1,6 +1,7 @@
 use url::Url;
 
 use crate::models::common::ResourceLoadable;
+use crate::types::profile_gate::{LocalProfileId, ProfilesBucket};
 use crate::models::ctx::CtxError;
 use crate::models::link::LinkError;
 use crate::models::local_search::Searchable;
@@ -173,4 +174,10 @@ pub enum Internal {
     /// Mark Season as watched (meta item)
     /// Mark move as watched (meta item)
     WatchedSendResult(MetaItemId, Result<RatingSendResponse, EnvError>),
+    /// Trigger saving the current active profile's Ctx data to per-profile storage keys.
+    SaveCurrentProfileData,
+    /// Trigger loading the Ctx data for the given profile.
+    LoadProfileData(LocalProfileId),
+    /// Result of loading the ProfilesBucket from storage.
+    ProfilesBucketLoaded(Option<ProfilesBucket>),
 }

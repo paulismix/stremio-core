@@ -3,6 +3,9 @@ use std::ops::Range;
 use serde::Deserialize;
 use url::Url;
 
+mod action_profile_gate;
+pub use action_profile_gate::ActionProfileGate;
+
 use crate::{
     models::{
         addon_details::Selected as AddonDetailsSelected,
@@ -270,6 +273,7 @@ pub enum ActionSearch {
 #[serde(tag = "action", content = "args")]
 pub enum Action {
     Ctx(ActionCtx),
+    ProfileGate(ActionProfileGate),
     Link(ActionLink),
     CatalogWithFilters(ActionCatalogWithFilters),
     CatalogsWithExtra(ActionCatalogsWithExtra),

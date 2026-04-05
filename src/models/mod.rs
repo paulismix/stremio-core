@@ -1,5 +1,6 @@
 pub mod common;
 pub mod ctx;
+pub mod profile_gate;
 
 pub mod addon_details;
 pub mod calendar;

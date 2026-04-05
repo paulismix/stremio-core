@@ -3,6 +3,7 @@ use crate::models::player::AnalyticsContext as PlayerAnalyticsContext;
 use crate::types::api::AuthRequest;
 use crate::types::library::LibraryItemId;
 use crate::types::profile::{AuthKey, Settings, UID};
+use crate::types::profile_gate::{LocalProfileId, ProfileGateError};
 use crate::types::resource::MetaItemId;
 use serde::Serialize;
 use url::Url;
@@ -155,6 +156,15 @@ pub enum Event {
     StreamingServerUrlsPushedToStorage {
         uid: UID,
     },
+    ProfileSelected {
+        profile_id: LocalProfileId,
+    },
+    ProfileCreated {
+        profile_id: LocalProfileId,
+    },
+    ProfilesBucketSaved,
+    ProfileGateError(ProfileGateError),
+    CurrentProfileDataSaved,
     Error {
         error: CtxError,
         source: Box<Event>,

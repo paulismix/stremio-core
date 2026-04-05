@@ -9,5 +9,6 @@ mod deep_links;
 mod link;
 mod meta_details;
 mod player;
+mod profile_gate;
 mod serde;
 mod streaming_server;

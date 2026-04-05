@@ -7,6 +7,7 @@ use super::*;
 use serde::Serialize;
 
 use stremio_core::{
+    constants::PROFILES_STORAGE_KEY,
     models::{
         addon_details::AddonDetails,
         calendar::Calendar,
@@ -21,13 +22,15 @@ use stremio_core::{
         local_search::LocalSearch,
         meta_details::MetaDetails,
         player::Player,
+        profile_gate::ProfileGate,
         streaming_server::StreamingServer,
     },
     runtime::Effects,
     types::{
         addon::Descriptor, api::LinkAuthKey, events::DismissedEventsBucket, library::LibraryBucket,
-        notifications::NotificationsBucket, profile::Profile, resource::MetaItemPreview,
-        search_history::SearchHistoryBucket, server_urls::ServerUrlsBucket, streams::StreamsBucket,
+        notifications::NotificationsBucket, profile::Profile, profile_gate::ProfilesBucket,
+        resource::MetaItemPreview, search_history::SearchHistoryBucket,
+        server_urls::ServerUrlsBucket, streams::StreamsBucket,
     },
     Model,
 };
@@ -39,6 +42,7 @@ use crate::env::WebEnv;
 #[cfg_attr(debug_assertions, derive(Serialize))]
 #[model(WebEnv)]
 pub struct WebModel {
+    pub profile_gate: ProfileGate,
     pub ctx: Ctx,
     pub auth_link: Link<LinkAuthKey>,
     pub data_export: DataExport,
@@ -68,6 +72,7 @@ impl WebModel {
         notifications: NotificationsBucket,
         search_history: SearchHistoryBucket,
         dismissed_events: DismissedEventsBucket,
+        profiles_bucket: ProfilesBucket,
     ) -> (WebModel, Effects) {
         let (continue_watching_preview, continue_watching_preview_effects) =
             ContinueWatchingPreview::new(&library, &notifications);
@@ -82,7 +87,9 @@ impl WebModel {
             InstalledAddonsWithFilters::new(&profile);
         let (streaming_server, streaming_server_effects) = StreamingServer::new::<WebEnv>(&profile);
         let (local_search, local_search_effects) = LocalSearch::new::<WebEnv>();
+        let profile_gate = ProfileGate::new(profiles_bucket);
         let model = WebModel {
+            profile_gate,
             ctx: Ctx::new(
                 profile,
                 library,
@@ -126,6 +133,10 @@ impl WebModel {
     }
     pub fn get_state(&self, field: &WebModelField) -> JsValue {
         match field {
+            WebModelField::ProfileGate => {
+                <JsValue as JsValueSerdeExt>::from_serde(&self.profile_gate)
+                    .expect("JsValue from ProfileGate")
+            }
             WebModelField::Ctx => serialize_ctx(&self.ctx),
             WebModelField::AuthLink => <JsValue as JsValueSerdeExt>::from_serde(&self.auth_link)
                 .expect("JsValue from AuthLink"),

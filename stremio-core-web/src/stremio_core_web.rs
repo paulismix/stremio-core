@@ -12,8 +12,8 @@ use wasm_bindgen::{prelude::wasm_bindgen, JsValue, UnwrapThrowExt};
 use stremio_core::{
     constants::{
         DISMISSED_EVENTS_STORAGE_KEY, LIBRARY_RECENT_STORAGE_KEY, LIBRARY_STORAGE_KEY,
-        NOTIFICATIONS_STORAGE_KEY, PROFILE_STORAGE_KEY, SEARCH_HISTORY_STORAGE_KEY,
-        STREAMING_SERVER_URLS_STORAGE_KEY, STREAMS_STORAGE_KEY,
+        NOTIFICATIONS_STORAGE_KEY, PROFILE_STORAGE_KEY, PROFILES_STORAGE_KEY,
+        SEARCH_HISTORY_STORAGE_KEY, STREAMING_SERVER_URLS_STORAGE_KEY, STREAMS_STORAGE_KEY,
     },
     models::common::Loadable,
     runtime::{msg::Action, Env, EnvError, Runtime, RuntimeAction, RuntimeEvent},
@@ -22,6 +22,7 @@ use stremio_core::{
         library::LibraryBucket,
         notifications::NotificationsBucket,
         profile::Profile,
+        profile_gate::ProfilesBucket,
         resource::{Stream, StreamSource},
         search_history::SearchHistoryBucket,
         server_urls::ServerUrlsBucket,
@@ -119,6 +120,7 @@ pub async fn initialize_runtime(emit_to_ui: js_sys::Function) -> Result<(), JsVa
                 WebEnv::get_storage::<NotificationsBucket>(NOTIFICATIONS_STORAGE_KEY),
                 WebEnv::get_storage::<SearchHistoryBucket>(SEARCH_HISTORY_STORAGE_KEY),
                 WebEnv::get_storage::<DismissedEventsBucket>(DISMISSED_EVENTS_STORAGE_KEY),
+                WebEnv::get_storage::<ProfilesBucket>(PROFILES_STORAGE_KEY),
             );
             match storage_result {
                 Ok((
@@ -130,6 +132,7 @@ pub async fn initialize_runtime(emit_to_ui: js_sys::Function) -> Result<(), JsVa
                     notifications_bucket,
                     search_history_bucket,
                     dismissed_events_bucket,
+                    profiles_bucket,
                 )) => {
                     let profile = profile.unwrap_or_default();
                     let mut library = LibraryBucket::new(profile.uid(), vec![]);
@@ -150,6 +153,7 @@ pub async fn initialize_runtime(emit_to_ui: js_sys::Function) -> Result<(), JsVa
                         search_history_bucket.unwrap_or(SearchHistoryBucket::new(profile.uid()));
                     let dismissed_events_bucket = dismissed_events_bucket
                         .unwrap_or(DismissedEventsBucket::new(profile.uid()));
+                    let profiles_bucket = profiles_bucket.unwrap_or_default();
                     let (model, effects) = WebModel::new(
                         profile,
                         library,
@@ -158,6 +162,7 @@ pub async fn initialize_runtime(emit_to_ui: js_sys::Function) -> Result<(), JsVa
                         notifications_bucket,
                         search_history_bucket,
                         dismissed_events_bucket,
+                        profiles_bucket,
                     );
                     let (runtime, rx) = Runtime::<WebEnv, _>::new(
                         model,

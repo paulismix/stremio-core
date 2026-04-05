@@ -1,9 +1,10 @@
 use crate::addon_transport::{AddonHTTPTransport, AddonTransport, UnsupportedTransport};
 use crate::constants::{
     DISMISSED_EVENTS_STORAGE_KEY, LIBRARY_RECENT_STORAGE_KEY, LIBRARY_STORAGE_KEY,
-    PROFILE_STORAGE_KEY, SCHEMA_VERSION, SCHEMA_VERSION_STORAGE_KEY, SEARCH_HISTORY_STORAGE_KEY,
-    STREAMING_SERVER_URLS_STORAGE_KEY, STREAMS_STORAGE_KEY,
+    PROFILE_STORAGE_KEY, PROFILES_STORAGE_KEY, SCHEMA_VERSION, SCHEMA_VERSION_STORAGE_KEY,
+    SEARCH_HISTORY_STORAGE_KEY, STREAMING_SERVER_URLS_STORAGE_KEY, STREAMS_STORAGE_KEY,
 };
+use crate::types::profile_gate::{LocalProfile, ProfilesBucket};
 use crate::models::ctx::Ctx;
 use crate::models::streaming_server::StreamingServer;
 use chrono::{DateTime, Utc};
@@ -312,6 +313,12 @@ pub trait Env {
                         .map_err(|error| EnvError::StorageSchemaVersionUpgrade(Box::new(error)))
                         .await?;
                     schema_version = 22;
+                }
+                if schema_version == 22 {
+                    migrate_storage_schema_to_v23::<Self>()
+                        .map_err(|error| EnvError::StorageSchemaVersionUpgrade(Box::new(error)))
+                        .await?;
+                    schema_version = 23;
                 }
                 if schema_version != SCHEMA_VERSION {
                     panic!(
@@ -795,6 +802,35 @@ fn migrate_storage_schema_to_v22<E: Env>() -> TryEnvFuture<()> {
             }
         })
         .and_then(|_| E::set_storage(SCHEMA_VERSION_STORAGE_KEY, Some(&22)))
+        .boxed_env()
+}
+
+fn migrate_storage_schema_to_v23<E: Env>() -> TryEnvFuture<()> {
+    E::get_storage::<serde_json::Value>(PROFILE_STORAGE_KEY)
+        .and_then(|profile_value| async {
+            let now = E::now();
+            let mut profiles_bucket = match profile_value {
+                Some(ref profile) => {
+                    let name = profile
+                        .get("auth")
+                        .and_then(|a| a.get("user"))
+                        .and_then(|u| u.get("email"))
+                        .and_then(|e| e.as_str())
+                        .map(|e| e.split('@').next().unwrap_or("User").to_string())
+                        .unwrap_or_else(|| "User".to_string());
+                    let local = LocalProfile::new(name, now);
+                    ProfilesBucket::with_initial_profile(local)
+                }
+                None => ProfilesBucket::default(),
+            };
+
+            // IMPORTANT: Gate is DISABLED by default.
+            // Existing users must explicitly enable it in Settings.
+            profiles_bucket.settings.enabled = false;
+
+            E::set_storage(PROFILES_STORAGE_KEY, Some(&profiles_bucket)).await?;
+            E::set_storage(SCHEMA_VERSION_STORAGE_KEY, Some(&23u32)).await
+        })
         .boxed_env()
 }
 

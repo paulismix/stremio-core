@@ -9,6 +9,7 @@ use crate::types::addon::{Descriptor, ExtraProp, OptionsLimit};
 
 pub const SCHEMA_VERSION_STORAGE_KEY: &str = "schema_version";
 pub const PROFILE_STORAGE_KEY: &str = "profile";
+pub const PROFILES_STORAGE_KEY: &str = "profiles";
 pub const LIBRARY_STORAGE_KEY: &str = "library";
 pub const LIBRARY_RECENT_STORAGE_KEY: &str = "library_recent";
 pub const STREAMS_STORAGE_KEY: &str = "streams";
@@ -43,7 +44,7 @@ pub const NEW_USER_DAYS: chrono::Duration = chrono::Duration::days(30);
 pub const WATCHED_THRESHOLD_COEF: f64 = 0.7;
 pub const CREDITS_THRESHOLD_COEF: f64 = 0.9;
 /// The latest migration scheme version
-pub const SCHEMA_VERSION: u32 = 22;
+pub const SCHEMA_VERSION: u32 = 23;
 pub const IMDB_LINK_CATEGORY: &str = "imdb";
 pub const GENRES_LINK_CATEGORY: &str = "Genres";
 pub const CINEMETA_TOP_CATALOG_ID: &str = "top";
