@@ -4,7 +4,7 @@ use serde::Serialize;
 use crate::constants::PROFILES_STORAGE_KEY;
 use crate::models::ctx::CtxError;
 use crate::runtime::msg::{Action, ActionProfileGate, Event, Internal, Msg};
-use crate::runtime::{EffectFuture, Effects, Env, EnvFutureExt, Update};
+use crate::runtime::{EffectFuture, Effects, Env, EnvFutureExt, UpdateWithCtx};
 use crate::types::profile_gate::{
     LocalProfile, LocalProfileId, PinConfig, ProfileGateError, ProfilesBucket,
 };
@@ -91,8 +91,8 @@ fn determine_initial_status(bucket: &ProfilesBucket) -> GateStatus {
     GateStatus::SelectingProfile
 }
 
-impl<E: Env + 'static> Update<E> for ProfileGate {
-    fn update(&mut self, msg: &Msg) -> Effects {
+impl<E: Env + 'static> UpdateWithCtx<E> for ProfileGate {
+    fn update(&mut self, msg: &Msg, _ctx: &crate::models::ctx::Ctx) -> Effects {
         match msg {
             Msg::Action(Action::ProfileGate(action)) => match action {
                 ActionProfileGate::ShowGate => {
@@ -109,8 +109,9 @@ impl<E: Env + 'static> Update<E> for ProfileGate {
                 }
                 ActionProfileGate::SwitchProfile => {
                     self.status = GateStatus::SelectingProfile;
-                    Effects::none()
-                        .join(Effects::msg(Msg::Internal(Internal::SaveCurrentProfileData)).unchanged())
+                    Effects::none().join(
+                        Effects::msg(Msg::Internal(Internal::SaveCurrentProfileData)).unchanged(),
+                    )
                 }
                 ActionProfileGate::SelectProfile { profile_id, pin } => {
                     let profile = match self.profiles_bucket.profiles.get(profile_id) {
@@ -136,11 +137,9 @@ impl<E: Env + 'static> Update<E> for ProfileGate {
                                 let pin_config = match &profile.pin {
                                     Some(pc) => pc.clone(),
                                     None => {
-                                        return Effects::msg(Msg::Event(
-                                            Event::ProfileGateError(
-                                                ProfileGateError::ProfileNotFound,
-                                            ),
-                                        ))
+                                        return Effects::msg(Msg::Event(Event::ProfileGateError(
+                                            ProfileGateError::ProfileNotFound,
+                                        )))
                                         .unchanged();
                                     }
                                 };
@@ -163,12 +162,9 @@ impl<E: Env + 'static> Update<E> for ProfileGate {
                                             pc.last_failed_at = None;
                                         }
                                     }
-                                    self.status =
-                                        GateStatus::LoadingProfile(profile_id.clone());
+                                    self.status = GateStatus::LoadingProfile(profile_id.clone());
                                     Effects::none()
-                                        .join(save_profiles_bucket::<E>(
-                                            &self.profiles_bucket,
-                                        ))
+                                        .join(save_profiles_bucket::<E>(&self.profiles_bucket))
                                         .join(
                                             Effects::msg(Msg::Event(Event::ProfileSelected {
                                                 profile_id: profile_id.clone(),
@@ -176,9 +172,9 @@ impl<E: Env + 'static> Update<E> for ProfileGate {
                                             .unchanged(),
                                         )
                                         .join(
-                                            Effects::msg(Msg::Internal(
-                                                Internal::LoadProfileData(profile_id.clone()),
-                                            ))
+                                            Effects::msg(Msg::Internal(Internal::LoadProfileData(
+                                                profile_id.clone(),
+                                            )))
                                             .unchanged(),
                                         )
                                 } else {
@@ -195,9 +191,8 @@ impl<E: Env + 'static> Update<E> for ProfileGate {
                                         profile_id: profile_id.clone(),
                                         error: Some(ProfileGateError::PinIncorrect),
                                     };
-                                    Effects::none().join(save_profiles_bucket::<E>(
-                                        &self.profiles_bucket,
-                                    ))
+                                    Effects::none()
+                                        .join(save_profiles_bucket::<E>(&self.profiles_bucket))
                                 }
                             }
                         }
@@ -261,10 +256,8 @@ impl<E: Env + 'static> Update<E> for ProfileGate {
                             Effects::none()
                                 .join(save_profiles_bucket::<E>(&self.profiles_bucket))
                                 .join(
-                                    Effects::msg(Msg::Event(Event::ProfileCreated {
-                                        profile_id,
-                                    }))
-                                    .unchanged(),
+                                    Effects::msg(Msg::Event(Event::ProfileCreated { profile_id }))
+                                        .unchanged(),
                                 )
                         }
                     }
@@ -309,8 +302,7 @@ impl<E: Env + 'static> Update<E> for ProfileGate {
                         }
                         Ok(()) => {
                             self.refresh_profiles_list();
-                            Effects::none()
-                                .join(save_profiles_bucket::<E>(&self.profiles_bucket))
+                            Effects::none().join(save_profiles_bucket::<E>(&self.profiles_bucket))
                         }
                     }
                 }
@@ -360,8 +352,7 @@ impl<E: Env + 'static> Update<E> for ProfileGate {
                         }
                         Ok(()) => {
                             self.refresh_profiles_list();
-                            Effects::none()
-                                .join(save_profiles_bucket::<E>(&self.profiles_bucket))
+                            Effects::none().join(save_profiles_bucket::<E>(&self.profiles_bucket))
                         }
                     }
                 }

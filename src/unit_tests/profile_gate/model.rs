@@ -117,10 +117,7 @@ fn select_profile_no_pin() {
         })
     });
     let model = runtime.model().unwrap();
-    assert_eq!(
-        model.profile_gate.status,
-        GateStatus::LoadingProfile(id)
-    );
+    assert_eq!(model.profile_gate.status, GateStatus::LoadingProfile(id));
 }
 
 #[test]
@@ -171,10 +168,7 @@ fn select_pin_profile_correct_pin() {
         })
     });
     let model = runtime.model().unwrap();
-    assert_eq!(
-        model.profile_gate.status,
-        GateStatus::LoadingProfile(id)
-    );
+    assert_eq!(model.profile_gate.status, GateStatus::LoadingProfile(id));
 }
 
 #[test]

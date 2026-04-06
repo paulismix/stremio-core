@@ -3,6 +3,7 @@ use std::ops::Range;
 use serde::Deserialize;
 use url::Url;
 
+#[path = "action_profile_gate.rs"]
 mod action_profile_gate;
 pub use action_profile_gate::ActionProfileGate;
 

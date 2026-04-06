@@ -1,12 +1,12 @@
 use crate::addon_transport::{AddonHTTPTransport, AddonTransport, UnsupportedTransport};
 use crate::constants::{
     DISMISSED_EVENTS_STORAGE_KEY, LIBRARY_RECENT_STORAGE_KEY, LIBRARY_STORAGE_KEY,
-    PROFILE_STORAGE_KEY, PROFILES_STORAGE_KEY, SCHEMA_VERSION, SCHEMA_VERSION_STORAGE_KEY,
+    PROFILES_STORAGE_KEY, PROFILE_STORAGE_KEY, SCHEMA_VERSION, SCHEMA_VERSION_STORAGE_KEY,
     SEARCH_HISTORY_STORAGE_KEY, STREAMING_SERVER_URLS_STORAGE_KEY, STREAMS_STORAGE_KEY,
 };
-use crate::types::profile_gate::{LocalProfile, ProfilesBucket};
 use crate::models::ctx::Ctx;
 use crate::models::streaming_server::StreamingServer;
+use crate::types::profile_gate::{LocalProfile, ProfilesBucket};
 use chrono::{DateTime, Utc};
 use futures::{future, Future, TryFutureExt};
 use http::Request;
@@ -807,7 +807,7 @@ fn migrate_storage_schema_to_v22<E: Env>() -> TryEnvFuture<()> {
 
 fn migrate_storage_schema_to_v23<E: Env>() -> TryEnvFuture<()> {
     E::get_storage::<serde_json::Value>(PROFILE_STORAGE_KEY)
-        .and_then(|profile_value| async {
+        .and_then(|profile_value| async move {
             let now = E::now();
             let mut profiles_bucket = match profile_value {
                 Some(ref profile) => {

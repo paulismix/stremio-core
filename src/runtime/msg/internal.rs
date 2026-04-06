@@ -1,7 +1,6 @@
 use url::Url;
 
 use crate::models::common::ResourceLoadable;
-use crate::types::profile_gate::{LocalProfileId, ProfilesBucket};
 use crate::models::ctx::CtxError;
 use crate::models::link::LinkError;
 use crate::models::local_search::Searchable;
@@ -15,6 +14,7 @@ use crate::types::api::{
 };
 use crate::types::library::{LibraryBucket, LibraryItem, LibraryItemId};
 use crate::types::profile::{Auth, AuthKey, Profile, User};
+use crate::types::profile_gate::{LocalProfileId, ProfilesBucket};
 use crate::types::rating::{RatingGetStatusResponse, RatingSendResponse};
 use crate::types::resource::MetaItemId;
 use crate::types::streaming_server::{

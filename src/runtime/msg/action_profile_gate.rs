@@ -45,7 +45,9 @@ pub enum ActionProfileGate {
     },
 
     #[serde(rename_all = "camelCase")]
-    DeleteProfile { profile_id: LocalProfileId },
+    DeleteProfile {
+        profile_id: LocalProfileId,
+    },
 
     #[serde(rename_all = "camelCase")]
     SetPin {
@@ -54,12 +56,16 @@ pub enum ActionProfileGate {
     },
 
     #[serde(rename_all = "camelCase")]
-    RemovePin { profile_id: LocalProfileId },
+    RemovePin {
+        profile_id: LocalProfileId,
+    },
 
     UpdateSettings(ProfileGateSettings),
 
     #[serde(rename_all = "camelCase")]
-    SetDefaultProfile { profile_id: LocalProfileId },
+    SetDefaultProfile {
+        profile_id: LocalProfileId,
+    },
 
     #[serde(rename_all = "camelCase")]
     LinkAccount {
@@ -68,5 +74,7 @@ pub enum ActionProfileGate {
     },
 
     #[serde(rename_all = "camelCase")]
-    UnlinkAccount { profile_id: LocalProfileId },
+    UnlinkAccount {
+        profile_id: LocalProfileId,
+    },
 }
